@@ -1,19 +1,12 @@
-package;
-
-/** Haxe-side replacement for btBoxShape::calculateLocalInertia. */
 class A
 {
 	var halfExtents:bullet.Bt.Vector3;
 
-	public function new(halfExtents:bullet.Bt.Vector3)
-	{
-		this.halfExtents = halfExtents;
-	}
+	public function new() {}
 
-	function getHalfExtentsWithMargin():bullet.Bt.Vector3
+	public function setHalfExtents(value:bullet.Bt.Vector3):Void
 	{
-		// Simulate Bullet's getter with the half extents supplied at construction.
-		return halfExtents;
+		halfExtents = value;
 	}
 
 	public function calculateLocalInertia(
@@ -21,8 +14,7 @@ class A
 		inertia:bullet.Bt.Vector3
 	):Void
 	{
-		var halfExtents:bullet.Bt.Vector3 = this.getHalfExtentsWithMargin();
-
+		var halfExtents = getHalfExtentsWithMargin();
 		var lx = 2 * halfExtents.x();
 		var ly = 2 * halfExtents.y();
 		var lz = 2 * halfExtents.z();
@@ -32,5 +24,10 @@ class A
 			mass / 12 * (lx * lx + lz * lz),
 			mass / 12 * (lx * lx + ly * ly)
 		);
+	}
+
+	function getHalfExtentsWithMargin():bullet.Bt.Vector3
+	{
+		return halfExtents;
 	}
 }
