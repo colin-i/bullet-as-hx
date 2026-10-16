@@ -26,9 +26,15 @@ class Main extends Sprite
 	var view:View3D;
 	var cube:Mesh;
 
+#if cpp
 	var world:cpp.Star<bullet.Bt.DiscreteDynamicsWorld>;
 	var cubeBody:cpp.Star<bullet.Bt.RigidBody>;
 	var tmp:bullet.Bt.Transform = new bullet.Bt.Transform();
+#else
+	var world:bullet.Bt.DiscreteDynamicsWorld;
+	var cubeBody:bullet.Bt.RigidBody;
+	var tmp:bullet.Bt.Transform; // reused every frame, so nothing to leak
+#end
 	var cubeMatrix:Matrix3D = new Matrix3D();
 	var raw:Vector<Float> = new Vector<Float>(16);
 	var frames:Int = 0;
@@ -70,37 +76,77 @@ class Main extends Sprite
 
 	function initBullet():Void
 	{
+#if cpp
 		var config = bullet.Bt.DefaultCollisionConfiguration.create();
 		var dispatcher = bullet.Bt.CollisionDispatcher.create(config);
 		var broadphase = bullet.Bt.DbvtBroadphase.create();
 		var solver = bullet.Bt.SequentialImpulseConstraintSolver.create();
 		world = bullet.Bt.DiscreteDynamicsWorld.create(dispatcher, broadphase, solver, config);
+#else
+		var collisionConfiguration = new bullet.Bt.DefaultCollisionConfiguration();
+		var dispatcher = new bullet.Bt.CollisionDispatcher(collisionConfiguration);
+		var broadphase = new bullet.Bt.DbvtBroadphase();
+		var solver = new bullet.Bt.SequentialImpulseConstraintSolver();
+		world = new bullet.Bt.DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+#end
 		world.setGravity(new bullet.Bt.Vector3(0, -9.81, 0));
 
+		// Ground: infinite static plane at y = 0 (mass 0 = static)
+#if cpp
 		var groundShape = bullet.Bt.StaticPlaneShape.create(new bullet.Bt.Vector3(0, 1, 0), 0);
 		var id = new bullet.Bt.Transform();
 		id.setIdentity();
 		var groundMotion = bullet.Bt.DefaultMotionState.create(id, id);
 		world.addRigidBody(bullet.Bt.RigidBody.create(0, groundMotion, cast groundShape, new bullet.Bt.Vector3(0, 0, 0)));
+#else
+		var groundShape = new bullet.Bt.StaticPlaneShape(new bullet.Bt.Vector3(0, 1, 0), 0);
+		var groundTransform = new bullet.Bt.Transform();
+		groundTransform.setIdentity();
+		var groundOffset = new bullet.Bt.Transform();
+		groundOffset.setIdentity();
+		var groundMotion = new bullet.Bt.DefaultMotionState(groundTransform, groundOffset);
+		var groundInfo = new bullet.Bt.RigidBodyConstructionInfo(
+			0, groundMotion, groundShape, new bullet.Bt.Vector3(0, 0, 0));
+		world.addRigidBody(new bullet.Bt.RigidBody(groundInfo));
+#end
 
+		// Cube: 1x1x1 Bullet units (half extents 0.5), mass 1, starts at y = 5.
+#if cpp
 		var boxShape = bullet.Bt.BoxShape.create(new bullet.Bt.Vector3(0.5, 0.5, 0.5));
+#else
+		var boxShape = new bullet.Bt.BoxShape(new bullet.Bt.Vector3(0.5, 0.5, 0.5));
+#end
 		var a = new A(new bullet.Bt.Vector3(0.5, 0.5, 0.5));
 
 		var boxTransform = new bullet.Bt.Transform();
 		boxTransform.setIdentity();
 		boxTransform.setOrigin(new bullet.Bt.Vector3(0, 5, 0));
+#if cpp
 		var boxMotion = bullet.Bt.DefaultMotionState.create(boxTransform, id);
+#else
+		var boxOffset = new bullet.Bt.Transform();
+		boxOffset.setIdentity();
+		var boxMotion = new bullet.Bt.DefaultMotionState(boxTransform, boxOffset);
+#end
+		// Give Bullet the box's real inertia so impact torque can rotate it.
 		var inertia = new bullet.Bt.Vector3(0, 0, 0);
-
 		//boxShape.calculateLocalInertia(1, inertia);
 		a.calculateLocalInertia(1, inertia);
 
+#if cpp
 		cubeBody = bullet.Bt.RigidBody.create(1, boxMotion, cast boxShape, inertia);
+#else
+		var boxInfo = new bullet.Bt.RigidBodyConstructionInfo(1, boxMotion, boxShape, inertia);
+		cubeBody = new bullet.Bt.RigidBody(boxInfo);
+#end
 		cubeBody.setDamping(0.02, 0.7);
 		cubeBody.setFriction(0.8);
 		cubeBody.setRestitution(0);
 		world.addRigidBody(cubeBody);
 
+#if !cpp
+		tmp = new bullet.Bt.Transform();
+#end
 		syncCube();
 	}
 
