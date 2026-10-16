@@ -1,17 +1,23 @@
+import cpp.Reference;
+
+@:nativeGen
+@:structAccess
 class A
 {
 	var halfExtents:bullet.Bt.Vector3;
 
-	public function new() {}
+	public function new(halfExtents:bullet.Bt.Vector3) {
+		this.halfExtents = halfExtents;
+	}
 
-	public function setHalfExtents(value:bullet.Bt.Vector3):Void
+	function getHalfExtentsWithMargin():bullet.Bt.Vector3
 	{
-		halfExtents = value;
+		return halfExtents;
 	}
 
 	public function calculateLocalInertia(
 		mass:Float,
-		inertia:bullet.Bt.Vector3
+		inertia:Reference<bullet.Bt.Vector3>
 	):Void
 	{
 		var halfExtents = getHalfExtentsWithMargin();
@@ -24,10 +30,5 @@ class A
 			mass / 12 * (lx * lx + lz * lz),
 			mass / 12 * (lx * lx + ly * ly)
 		);
-	}
-
-	function getHalfExtentsWithMargin():bullet.Bt.Vector3
-	{
-		return halfExtents;
 	}
 }

@@ -84,7 +84,7 @@ class Main extends Sprite
 		world.addRigidBody(bullet.Bt.RigidBody.create(0, groundMotion, cast groundShape, new bullet.Bt.Vector3(0, 0, 0)));
 
 		var boxShape = bullet.Bt.BoxShape.create(new bullet.Bt.Vector3(0.5, 0.5, 0.5));
-		var a=new A();a.setHalfExtents(new bullet.Bt.Vector3(0.5, 0.5, 0.5));
+		var a = new A(new bullet.Bt.Vector3(0.5, 0.5, 0.5));
 
 		var boxTransform = new bullet.Bt.Transform();
 		boxTransform.setIdentity();

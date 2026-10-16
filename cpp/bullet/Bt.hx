@@ -3,17 +3,21 @@ package bullet;
 import cpp.Star;
 import cpp.Reference;
 
-// Value types (copied on the C++ stack)
 @:buildXml('
 <files id="haxe">
-	<compilerflag value="-I/usr/include/bullet"/>
+	<compilerflag value="-I${BULLET_SRC}" if="BULLET_SRC"/>
+	<compilerflag value="-I/usr/include/bullet" unless="BULLET_SRC"/>
 </files>
 <target id="haxe">
+	<lib name="-L${BULLET_BUILD}/src/BulletDynamics" if="BULLET_BUILD"/>
+	<lib name="-L${BULLET_BUILD}/src/BulletCollision" if="BULLET_BUILD"/>
+	<lib name="-L${BULLET_BUILD}/src/LinearMath" if="BULLET_BUILD"/>
 	<lib name="-lBulletDynamics"/>
 	<lib name="-lBulletCollision"/>
 	<lib name="-lLinearMath"/>
 </target>
 ')
+
 @:include("btBulletDynamicsCommon.h")
 @:native("btVector3") @:structAccess @:unreflective
 extern class Vector3 {
@@ -71,6 +75,7 @@ extern class SequentialImpulseConstraintSolver {
 @:include("btBulletDynamicsCommon.h")
 @:native("btCollisionShape") @:structAccess @:unreflective
 extern class CollisionShape {
+	function calculateLocalInertia(mass:Float, inertia:Reference<Vector3>):Void;
 }
 
 @:include("btBulletDynamicsCommon.h")
