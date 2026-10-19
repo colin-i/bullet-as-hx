@@ -9,9 +9,7 @@ import cpp.Reference;
 	<compilerflag value="-I/usr/include/bullet" unless="BULLET_SRC"/>
 </files>
 <target id="haxe">
-	<lib name="-L${BULLET_BUILD}/src/BulletDynamics" if="BULLET_BUILD"/>
-	<lib name="-L${BULLET_BUILD}/src/BulletCollision" if="BULLET_BUILD"/>
-	<lib name="-L${BULLET_BUILD}/src/LinearMath" if="BULLET_BUILD"/>
+	<lib name="-L${BULLET_BUILD}" if="BULLET_BUILD"/>
 	<lib name="-lBulletDynamics"/>
 	<lib name="-lBulletCollision"/>
 	<lib name="-lLinearMath"/>

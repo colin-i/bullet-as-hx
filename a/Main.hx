@@ -21,7 +21,8 @@ class Main extends Sprite
 	// 1 Bullet unit = 100 Away3D units (Bullet likes objects around 0.1..10 units)
 	static inline var SCALE:Float = 100;
 	// wait a moment before starting the simulation so you can see the fall
-	static inline var START_DELAY:Int = 90;
+	//static inline var START_DELAY:Int = 60;
+	static inline var START_DELAY:Int = 2;
 
 	var view:View3D;
 	var cube:Mesh;
@@ -188,12 +189,19 @@ class Main extends Sprite
 
 		if (world != null)
 		{
-			if (frames > START_DELAY) world.stepSimulation(1 / 60);
-			syncCube();
+			if (frames > START_DELAY)
+			{
+				//world.stepSimulation(1 / 60);
+				for (i in 0...60)world.stepSimulation(1 / 60, 0);
 
-			if (frames % 30 == 0) trace("cube y (bullet units): " + tmp.getOrigin().y());
+				syncCube();
+
+			}
+			//if (frames % 30 == 0)
+			trace("cube y (bullet units): " + tmp.getOrigin().y());
 		}
 
 		view.render();
 	}
+
 }
