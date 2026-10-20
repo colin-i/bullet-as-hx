@@ -20,9 +20,11 @@ class Main extends Sprite
 {
 	// 1 Bullet unit = 100 Away3D units (Bullet likes objects around 0.1..10 units)
 	static inline var SCALE:Float = 100;
-	// wait a moment before starting the simulation so you can see the fall
-	//static inline var START_DELAY:Int = 60;
-	static inline var START_DELAY:Int = 2;
+
+	// derived from the fps in applyFps()
+	var startDelay:Int = 2;      // 2 seconds worth of frames
+	var stepsPerFrame:Int = 60;  // physics steps per rendered frame (60 physics steps per second)
+	var traceEvery:Int = 1;      // trace once per second
 
 	var view:View3D;
 	var cube:Mesh;
@@ -72,6 +74,7 @@ class Main extends Sprite
 		initBullet();
 		#end
 
+		addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 		addEventListener(Event.ENTER_FRAME, onEnterFrame);
 	}
 
@@ -183,25 +186,45 @@ class Main extends Sprite
 		cube.transform = cubeMatrix;
 	}
 
-	function onEnterFrame(event:Event):Void
+	function onAddedToStage(_:Event):Void
 	{
-		frames++;
+	    removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 
-		if (world != null)
-		{
-			if (frames > START_DELAY)
-			{
-				//world.stepSimulation(1 / 60);
-				for (i in 0...60)world.stepSimulation(1 / 60, 0);
+	    #if sys
+	    // only override if the variable exists and is valid, otherwise keep the project.xml fps
+	    var s = Sys.getEnv("FPS");
+	    if (s != null)
+	    {
+	        var f = Std.parseFloat(s);
+	        if (!Math.isNaN(f) && f > 0) stage.frameRate = f;
+	    }
+	    #end
 
-				syncCube();
-
-			}
-			//if (frames % 30 == 0)
-			trace("cube y (bullet units): " + tmp.getOrigin().y());
-		}
-
-		view.render();
+	    applyFps(stage.frameRate);
 	}
 
+	function applyFps(fps:Float):Void
+	{
+	    startDelay    = Std.int(Math.max(1, Math.round(1.5 * fps)));
+	    stepsPerFrame = Std.int(Math.max(1, Math.round(60 / fps)));
+	    traceEvery    = Std.int(Math.max(1, Math.round(fps)));
+	}
+
+	function onEnterFrame(event:Event):Void
+	{
+	    frames++;
+
+	    if (world != null)
+	    {
+	        if (frames > startDelay)
+	        {
+	            for (i in 0...stepsPerFrame) world.stepSimulation(1 / 60, 0);
+	            syncCube();
+	        }
+	        if (frames % traceEvery == 0)
+	            trace("cube y (bullet units): " + tmp.getOrigin().y());
+	    }
+
+	    view.render();
+	}
 }
