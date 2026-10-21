@@ -32,12 +32,11 @@ class Main extends Sprite
 #if cpp
 	var world:cpp.Star<bullet.Bt.DiscreteDynamicsWorld>;
 	var cubeBody:cpp.Star<bullet.Bt.RigidBody>;
-	var tmp:bullet.Bt.Transform = new bullet.Bt.Transform();
 #else
 	var world:bullet.Bt.DiscreteDynamicsWorld;
 	var cubeBody:bullet.Bt.RigidBody;
-	var tmp:bullet.Bt.Transform; // reused every frame, so nothing to leak
 #end
+	var tmp:bullet.Bt.Transform = new bullet.Bt.Transform();
 	var cubeMatrix:Matrix3D = new Matrix3D();
 	var raw:Vector<Float> = new Vector<Float>(16);
 	var frames:Int = 0;
@@ -104,14 +103,10 @@ class Main extends Sprite
 		world.addRigidBody(bullet.Bt.RigidBody.create(0, groundMotion, cast groundShape, new bullet.Bt.Vector3(0, 0, 0)));
 #else
 		var groundShape = new bullet.Bt.StaticPlaneShape(new bullet.Bt.Vector3(0, 1, 0), 0);
-		var groundTransform = new bullet.Bt.Transform();
-		groundTransform.setIdentity();
-		var groundOffset = new bullet.Bt.Transform();
-		groundOffset.setIdentity();
-		var groundMotion = new bullet.Bt.DefaultMotionState(groundTransform, groundOffset);
-		var groundInfo = new bullet.Bt.RigidBodyConstructionInfo(
-			0, groundMotion, groundShape, new bullet.Bt.Vector3(0, 0, 0));
-		world.addRigidBody(new bullet.Bt.RigidBody(groundInfo));
+		var id = new bullet.Bt.Transform();
+		id.setIdentity();
+		var groundMotion = new bullet.Bt.DefaultMotionState(id, id);
+		world.addRigidBody(new bullet.Bt.RigidBody(new bullet.Bt.RigidBodyConstructionInfo(0, groundMotion, groundShape, new bullet.Bt.Vector3(0, 0, 0))));
 #end
 
 		// Cube: 1x1x1 Bullet units (half extents 0.5), mass 1, starts at y = 5.
@@ -128,9 +123,7 @@ class Main extends Sprite
 #if cpp
 		var boxMotion = bullet.Bt.DefaultMotionState.create(boxTransform, id);
 #else
-		var boxOffset = new bullet.Bt.Transform();
-		boxOffset.setIdentity();
-		var boxMotion = new bullet.Bt.DefaultMotionState(boxTransform, boxOffset);
+		var boxMotion = new bullet.Bt.DefaultMotionState(boxTransform, id);
 #end
 		// Give Bullet the box's real inertia so impact torque can rotate it.
 		var inertia = new bullet.Bt.Vector3(0, 0, 0);
@@ -140,17 +133,13 @@ class Main extends Sprite
 #if cpp
 		cubeBody = bullet.Bt.RigidBody.create(1, boxMotion, cast boxShape, inertia);
 #else
-		var boxInfo = new bullet.Bt.RigidBodyConstructionInfo(1, boxMotion, boxShape, inertia);
-		cubeBody = new bullet.Bt.RigidBody(boxInfo);
+		cubeBody = new bullet.Bt.RigidBody(new bullet.Bt.RigidBodyConstructionInfo(1, boxMotion, boxShape, inertia));
 #end
 		cubeBody.setDamping(0.02, 0.7);
 		cubeBody.setFriction(0.8);
 		cubeBody.setRestitution(0);
 		world.addRigidBody(cubeBody);
 
-#if !cpp
-		tmp = new bullet.Bt.Transform();
-#end
 		syncCube();
 	}
 
